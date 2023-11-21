@@ -1,0 +1,56 @@
+Бэклог задач бота
+. Уметь хранить список покупок
+. уметь хранить ДР друзей
+.Хранить расписание - ну типо купил билет в театр и что бы не забыть в него сходить нужна напоминалка
+.Вынести текс в конфигурационный файл
+подумать что
+. Сделать команды для бота не регистрозависимыми. Тоесть юзер будет писать ключевы слова
+Товары товар ТОвар, а функция Lower будет приводить его в нижний регистр и отдавать на обработку
+
+
+
+1# Функция для извлечения списка товаров из базы данных
+def get_purchases():
+    cursor.execute('SELECT * FROM Purchases')
+    purchases = cursor.fetchall()
+    return purchasesName
+
+# Выводим результаты
+for Purchases in purchasesName:
+  print(purchasesName)
+# Функция для обработки команды /list
+def list_command(update, context):
+    purchases = get_purchases()
+    if purchases:
+        purchases_list = "\n".join([f"{purchases[0]}. {purchases[1]}" for purchases in purchases])
+        update.message.reply_text("Список товаров:\n" + product_list)
+    else:
+        update.message.reply_text("В базе данных нет товаров.")
+
+2
+4
+
+@bot.message_handler()
+def get_user_text(message):
+    if message.text in config.message_command_purchases:
+        bot.send_message(message.chat.id, 'Ничего на надо, не сливай бабки, транжира', parse_mode='html')
+    else:
+        bot.send_message(message.chat.id, 'Я не понимаю, обучи меня', parse_mode='html')
+
+
+@bot.message_handler(content_types = 'text')
+def get_photo(message):
+    markup = types.ReplyKeyboardMarkup(resize_keyboard= True)
+    button_purcheses = types.KeyboardButton('Товары', callback_data = 'button_purcheses')
+    button_notes = types.KeyboardButton('ДР', callback_data = 'button_notes' )
+
+    markup.add(button_purcheses, button_notes)
+
+    bot.send_message(message.chat.id, 'Выбери', reply_markup= markup)
+
+
+
+'''@bot.callback_query_handlers(func=lambda message:True)
+def callback(call):
+    if call.message:
+        if call.data == 'button_purcheses':'''
