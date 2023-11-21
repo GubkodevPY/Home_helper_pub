@@ -27,8 +27,8 @@ def list_command(update, context):
     else:
         update.message.reply_text("В базе данных нет товаров.")
 
-2
-4
+
+
 
 @bot.message_handler()
 def get_user_text(message):
@@ -54,3 +54,7 @@ def get_photo(message):
 def callback(call):
     if call.message:
         if call.data == 'button_purcheses':'''
+
+        
+
+TEST TEST TEST TEST
