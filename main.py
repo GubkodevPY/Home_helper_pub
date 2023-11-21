@@ -47,16 +47,30 @@ def show_products(call):
 def handle_add_product(call):
     bot.send_message(call.message.chat.id, "Введите наименование товара:")
 
+@bot.message_handler(func=lambda message: True)
+def handle_message(message):
+    print("Получено сообщение:", message.text)  # Добавьте это отладочное сообщение
+    if message.text:
+        result = add_product(message.text)
+        bot.send_message(message.chat.id, result)
+    else:
+        bot.send_message(message.chat.id, "Вы не передали название товара.")
+
 def add_product(product_name):
     # Подключение к базе данных
     conn = sqlite3.connect('Home_help.db')
     cursor = conn.cursor()
 
-    # Добавление товара в базу данных
-    cursor.execute("INSERT INTO purchases ('purchasesName') VALUES (?)", (product_name))
-    conn.commit()
-    return f"Товар '{product_name}' успешно добавлен в базу данных!"
-    conn.close()
+    try:
+        # Добавление товара в базу данных
+        cursor.execute("INSERT INTO purchases (purchasesName) VALUES (?)", (product_name,))
+        conn.commit()
+        return f"Товар '{product_name}' успешно добавлен в базу данных!"
+    except sqlite3.Error as e:
+        print(f"Ошибка при добавлении товара: {e}")
+        return f"Ошибка при добавлении товара: {e}"
+    finally:
+        conn.close()
 
 
 # Заметки .... Не тогать
