@@ -38,40 +38,28 @@ def show_products(call):
     btn_del_product = types.InlineKeyboardButton('Удалить товар', callback_data='del_product')
     keyboard.add(btn_add_product, btn_del_product)
 
-    cursor.close()
-    conn.close()
-
     bot.send_message(call.message.chat.id, "Что делаем со списком:", reply_markup=keyboard)
 
 @bot.callback_query_handler(func=lambda call: call.data == 'add_product')
 def handle_add_product(call):
     bot.send_message(call.message.chat.id, "Введите наименование товара:")
 
-@bot.message_handler(func=lambda message: True)
-def handle_message(message):
-    print("Получено сообщение:", message.text)  # Добавьте это отладочное сообщение
-    if message.text:
-        result = add_product(message.text)
-        bot.send_message(message.chat.id, result)
-    else:
-        bot.send_message(message.chat.id, "Вы не передали название товара.")
 
-def add_product(product_name):
-    # Подключение к базе данных
+# Функция добавления товара в базу данных
+
+@bot.callback_query_handler(func=lambda call: call.data == 'add_product_to_db')
+def add_product_to_db(product_name):
     conn = sqlite3.connect('Home_help.db')
     cursor = conn.cursor()
+    cursor.execute("INSERT INTO purchases (purchasesName) VALUES (?)", (product_name,))
+    conn.commit()
+    conn.close()
 
-    try:
-        # Добавление товара в базу данных
-        cursor.execute("INSERT INTO purchases (purchasesName) VALUES (?)", (product_name,))
-        conn.commit()
-        return f"Товар '{product_name}' успешно добавлен в базу данных!"
-    except sqlite3.Error as e:
-        print(f"Ошибка при добавлении товара: {e}")
-        return f"Ошибка при добавлении товара: {e}"
-    finally:
-        conn.close()
-
+@bot.message_handler(func=lambda message: True)
+def handle_add_product(message):
+    product_name = message.text  # Получаем наименование товара из сообщения пользователя
+    add_product_to_db # Вызываем функцию для добавления товара в БД
+    bot.send_message(message.chat.id, f"Товар '{product_name}' успешно добавлен в базу данных.")  # Отправляем подтверждение пользователю
 
 # Заметки .... Не тогать
 @bot.callback_query_handler(func=lambda call: call.data == 'show_notes')
