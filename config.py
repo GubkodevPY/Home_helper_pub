@@ -1,6 +1,6 @@
 # https://t.me/HelpCergik_bot
 # Домашний помощник
-TOKEN = '6716958339:AAFXt9LKmba0zF8r0Vu9Wihf_pHF9N8k4-I' # токен доступа 6446089490:AAHCJV6Vs3P84NVMBe4ZYSG2g5q1fB9ft_o
+TOKEN = '' # токен доступа 6446089490:AAHCJV6Vs3P84NVMBe4ZYSG2g5q1fB9ft_o
 continuous_processing = True # настройка бота на постоянное выполнение
 
 message_start = "Даров, че надо?"
