@@ -44,7 +44,6 @@ def show_products(call):
 def handle_add_product(call):
     bot.send_message(call.message.chat.id, "Введите наименование товара:")
 
-
 # Функция добавления товара в базу данных
 
 @bot.callback_query_handler(func=lambda call: call.data == 'add_product_to_db')
@@ -82,4 +81,3 @@ def show_products(call):
     conn.close()
 
 bot.polling() # настройка бота на постоянное выполнение прапра
-

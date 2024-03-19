@@ -55,6 +55,6 @@ def callback(call):
     if call.message:
         if call.data == 'button_purcheses':'''
 
-        
+
 
 TEST TEST TEST TEST

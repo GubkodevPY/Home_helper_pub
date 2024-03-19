@@ -8,7 +8,7 @@ cursor = conn.cursor()
 cursor.execute('''
 CREATE TABLE IF NOT EXISTS Purchases (
 id INTEGER NOT NULL PRIMARY KEY,
-purchasesName TEXT NOT NULL,
+purchasesName varchar(50) NOT NULL,
 status INTEGER NOT NULL DEFAULT 1,
 createdOn DATATIME NOT NULL DEFAULT (DATETIME('now'))
 )
@@ -26,7 +26,4 @@ createdOn DATATIME NOT NULL DEFAULT (DATETIME('now'))
 ''')
 
 
-# Сохраняем изменения и закрываем соединение
 
-conn.commit()
-conn.close()
