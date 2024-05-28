@@ -4,7 +4,6 @@ from telebot import types
 import sqlite3
 
 bot = telebot.TeleBot(config.TOKEN)
-# новый коммит
 
 @bot.message_handler(func=lambda message: True)
 def handle_message(message):
