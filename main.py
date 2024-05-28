@@ -4,7 +4,7 @@ from telebot import types
 import sqlite3
 
 bot = telebot.TeleBot(config.TOKEN)
-
+# новый коммит
 
 @bot.message_handler(func=lambda message: True)
 def handle_message(message):
@@ -43,10 +43,9 @@ def show_products(call):
 @bot.callback_query_handler(func=lambda call: call.data == 'add_product')
 def handle_add_product(call):
     bot.send_message(call.message.chat.id, "Введите наименование товара:")
-
 # Функция добавления товара в базу данных
 
-@bot.callback_query_handler(func=lambda call: call.data == 'add_product_to_db')
+#@bot.callback_query_handler(func=lambda call: call.data == 'add_product_to_db')
 def add_product_to_db(product_name):
     conn = sqlite3.connect('Home_help.db')
     cursor = conn.cursor()
@@ -63,7 +62,7 @@ def handle_add_product(message):
 # Заметки .... Не тогать
 @bot.callback_query_handler(func=lambda call: call.data == 'show_notes')
 def show_products(call):
-    conn = sqlite3.connect( 'Home_help.db')
+    conn = sqlite3.connect('Home_help.db')
     cursor = conn.cursor()
 
     cursor.execute("SELECT NotesName FROM Notes")
