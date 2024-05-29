@@ -7,6 +7,15 @@ import sqlite3
 bot = telebot.TeleBot(config.TOKEN)
 purchasesName = None
 
+import telebot
+from telebot import types
+from telebot.types import InlineKeyboardButton
+import config
+import sqlite3
+
+bot = telebot.TeleBot(config.TOKEN)
+purchasesName = None
+
 
 
 @bot.message_handler()
