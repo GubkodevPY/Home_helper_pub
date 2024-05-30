@@ -7,67 +7,79 @@ import sqlite3
 bot = telebot.TeleBot(config.TOKEN)
 purchasesName = None
 
-import telebot
-from telebot import types
-from telebot.types import InlineKeyboardButton
-import config
-import sqlite3
+# Создание таблицы, если она не существует
+def initialize_db():
+    conn = sqlite3.connect('storege.db')
+    cur = conn.cursor()
+    cur.execute(
+        """CREATE TABLE IF NOT EXISTS Purchases (
+            id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+            purchasesName VARCHAR(50) NOT NULL,
+            status INTEGER NOT NULL DEFAULT 1,
+            createdOn DATETIME NOT NULL DEFAULT (DATETIME('now'))
+        )"""
+    )
+    conn.commit()
+    cur.close()
+    conn.close()
 
-bot = telebot.TeleBot(config.TOKEN)
-purchasesName = None
+initialize_db()
 
-
-
+# Стартовое сообщение и выбор действий
 @bot.message_handler()
 def start(message):
-    conn = sqlite3.connect('storege.db')
-    cur = conn.cursor()
+    keyboard = types.InlineKeyboardMarkup()
+    btn_show_products = types.InlineKeyboardButton('Список товаров', callback_data='show_products')
+    btn_add_product = types.InlineKeyboardButton('Добавить товар', callback_data='add_product')
+    btn_del_product = types.InlineKeyboardButton('Удалить товар', callback_data='del_product')
+    keyboard.add(btn_show_products, btn_add_product, btn_del_product)
+    bot.send_message(message.chat.id, "Что хотите сделать?", reply_markup=keyboard)
 
-    cur.execute(
-        """CREATE TABLE IF NOT EXISTS Purchases (id INTEGER NOT NULL PRIMARY KEY,purchasesName varchar(50) NOT NULL,status INTEGER NOT NULL DEFAULT 1,createdOn DATATIME NOT NULL DEFAULT (DATETIME('now')))""")
-    # """CREATE TABLE IF NOT EXISTS items (id INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR(50))""")
-    conn.commit()
-    cur.close()
-    conn.close()
+# Обработчик нажатия на кнопку "Добавить товар"
+@bot.callback_query_handler(func=lambda call: call.data == 'add_product')
+def handle_add_product(call):
+    bot.send_message(call.message.chat.id, "Введите наименование товара:")
+    bot.register_next_step_handler(call.message, create_prod)
 
-    bot.send_message(message.chat.id, 'Сейчас добавим')
-    bot.register_next_step_handler(message, create_prod)
-
-
+# Обработчик ввода наименования товара
 def create_prod(message):
     purchasesName = message.text.strip()
+    if purchasesName:
+        conn = sqlite3.connect('storege.db')
+        cur = conn.cursor()
+        try:
+            cur.execute("INSERT INTO Purchases (purchasesName) VALUES (?)", (purchasesName,))
+            conn.commit()
+            bot.send_message(message.chat.id, f"Товар '{purchasesName}' успешно добавлен.")
+            bot.send_message(message.chat.id, "Что хотите сделать?")
+        except sqlite3.Error as e:
+            bot.send_message(message.chat.id, f"Ошибка при добавлении товара: {e}")
+        finally:
+            cur.close()
+            conn.close()
+    else:
+        bot.send_message(message.chat.id, "Вы не ввели название товара. Попробуйте еще раз.")
 
-    conn = sqlite3.connect('storege.db')
-    cur = conn.cursor()
 
-    cur.execute("INSERT INTO Purchases (purchasesName) VALUES ('%s')" % (purchasesName))
-    conn.commit()
-    cur.close()
-    conn.close()
-
-    markup = telebot.types.InlineKeyboardMarkup()
-    markup.add(telebot.types.InlineKeyboardButton('Cписок товаров', callback_data='show_products'))
-    bot.send_message(message.chat.id, 'Успешно добавили', reply_markup=markup)
-
-
+# Обработчик нажатия на кнопку "Список товаров"
 @bot.callback_query_handler(func=lambda call: call.data == 'show_products')
 def show_products(call):
     conn = sqlite3.connect('storege.db')
     cursor = conn.cursor()
 
     cursor.execute("SELECT purchasesName FROM Purchases")
-    Purchases = cursor.fetchall()
+    purchases = cursor.fetchall()
 
-    if not Purchases:
-        bot.send_message(call.message.chat.id, "Список товаров:\nВ базе данных нет заметок.")
+    if not purchases:
+        bot.send_message(call.message.chat.id, "Список товаров:\nВ базе данных нет товаров.")
     else:
         response = "Список товаров:\n"
-        for product in Purchases:
+        for product in purchases:
             response += f"- {product[0]}\n"
-    bot.send_message(call.message.chat.id, response)
+        bot.send_message(call.message.chat.id, response)
 
     keyboard = types.InlineKeyboardMarkup()
-    btn_add_product = types.InlineKeyboardButton('Добавить товар', callback_data='create_prod')
+    btn_add_product = types.InlineKeyboardButton('Добавить товар', callback_data='add_product')
     btn_del_product = types.InlineKeyboardButton('Удалить товар', callback_data='del_product')
     keyboard.add(btn_add_product, btn_del_product)
 
@@ -75,7 +87,90 @@ def show_products(call):
 
 
 
+# @bot.callback_query_handler(func=lambda call: call.data == 'del_product')
+# def handle_del_product(call):
+#     bot.send_message(call.message.chat.id, "Введите для удаления:")
+#     bot.register_next_step_handler(call.message, del_product)
+
+
+# Обработчик нажатия на кнопку "Удалить товар"
+@bot.callback_query_handler(func=lambda call: call.data.startswith('del_product_'))
+def del_product(call):
+    product_id = int(call.data.split('_')[2])
+    conn = sqlite3.connect('storege.db')
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM Purchases WHERE id = ?", (product_id,))
+    conn.commit()
+    cursor.close()
+    conn.close()
+    bot.send_message(call.message.chat.id, f"Товар с ID {product_id} удален.")
+    show_products(call)
+
+
+# Запуск бота
 bot.polling(none_stop=True)
+
+
+# ===========Работающая часть кода======================
+# @bot.message_handler()
+# def start(message):
+#     conn = sqlite3.connect('storege.db')
+#     cur = conn.cursor()
+#
+#     cur.execute(
+#         """CREATE TABLE IF NOT EXISTS Purchases (id INTEGER NOT NULL PRIMARY KEY,purchasesName varchar(50) NOT NULL,status INTEGER NOT NULL DEFAULT 1,createdOn DATATIME NOT NULL DEFAULT (DATETIME('now')))""")
+#     # """CREATE TABLE IF NOT EXISTS items (id INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR(50))""")
+#     conn.commit()
+#     cur.close()
+#     conn.close()
+#
+#     bot.send_message(message.chat.id, 'Сейчас добавим')
+#     bot.register_next_step_handler(message, create_prod)
+#
+#
+# def create_prod(message):
+#     purchasesName = message.text.strip()
+#
+#     conn = sqlite3.connect('storege.db')
+#     cur = conn.cursor()
+#
+#     cur.execute("INSERT INTO Purchases (purchasesName) VALUES ('%s')" % (purchasesName))
+#     conn.commit()
+#     cur.close()
+#     conn.close()
+#
+#     markup = telebot.types.InlineKeyboardMarkup()
+#     markup.add(telebot.types.InlineKeyboardButton('Cписок товаров', callback_data='show_products'))
+#     bot.send_message(message.chat.id, 'Успешно добавили', reply_markup=markup)
+#
+#
+# @bot.callback_query_handler(func=lambda call: call.data == 'show_products')
+# def show_products(call):
+#     conn = sqlite3.connect('storege.db')
+#     cursor = conn.cursor()
+#
+#     cursor.execute("SELECT purchasesName FROM Purchases")
+#     Purchases = cursor.fetchall()
+#
+#     if not Purchases:
+#         bot.send_message(call.message.chat.id, "Список товаров:\nВ базе данных нет заметок.")
+#     else:
+#         response = "Список товаров:\n"
+#         for product in Purchases:
+#             response += f"- {product[0]}\n"
+#     bot.send_message(call.message.chat.id, response)
+#
+#     keyboard = types.InlineKeyboardMarkup()
+#     btn_add_product = types.InlineKeyboardButton('Добавить товар', callback_data='create_prod')
+#     btn_del_product = types.InlineKeyboardButton('Удалить товар', callback_data='del_product')
+#     keyboard.add(btn_add_product, btn_del_product)
+#
+#     bot.send_message(call.message.chat.id, "Что делаем со списком:", reply_markup=keyboard)
+#
+# bot.polling(none_stop=True)
+# ==================Работающая часть кода+++++++++++++++++++++++
+
+
 
 # def create_item(message):
 #     item = message.text.strip()
